@@ -1,0 +1,31 @@
+import numpy as np
+from gnuradio import gr
+import math
+
+class blk(gr.sync_block):  
+    """RF VCO: genera una señal RF modulada en amplitud y fase."""
+
+    def __init__(self, fc=128000, samp_rate=320000):  
+        # Inicializa el bloque como un bloque sincronizado de GNU Radio
+        # in_sig: dos entradas de tipo float32 (A y Q)
+        # out_sig: una salida de tipo float32 (señal RF)
+        gr.sync_block.__init__(
+            self,
+            name='e_RF_VCO_ff',   
+            in_sig=[np.float32, np.float32],
+            out_sig=[np.float32]
+        )
+        self.fc = fc          # Frecuencia de la portadora en Hz
+        self.samp_rate = samp_rate  # Frecuencia de muestreo en Hz
+        self.n_m = 0          # Contador de muestras para generar el vector de tiempo
+
+    def work(self, input_items, output_items):
+        A = input_items[0]  # Amplitud de la señal
+        Q = input_items[1]  # Fase de la señal
+        y = output_items[0] # Salida del bloque
+        N = len(A)          # Número de muestras a procesar
+        n = np.linspace(self.n_m, self.n_m + N - 1, N)  # Vector de índices de muestra
+        self.n_m += N       # Actualiza el contador de muestras
+        # Señal RF: y[n] = A[n] * cos(2*pi*fc*n/fs + Q[n])
+        y[:] = A * np.cos(2 * math.pi * self.fc * n / self.samp_rate + Q)
+        return len(output_items[0])  # Retorna el número de muestras procesadas
