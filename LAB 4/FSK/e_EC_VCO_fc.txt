@@ -1,0 +1,26 @@
+import numpy as np
+from gnuradio import gr
+import math
+
+class blk(gr.sync_block):  
+    """EC VCO: genera una señal compleja en banda base (I + jQ)."""
+
+    def __init__(self):  
+        # Inicializa el bloque como un bloque sincronizado de GNU Radio
+        # in_sig: dos entradas de tipo float32 (A y Q)
+        # out_sig: una salida de tipo complex64 (señal compleja)
+        gr.sync_block.__init__(
+            self,
+            name='e_EC_VCO_fc',   
+            in_sig=[np.float32, np.float32],
+            out_sig=[np.complex64]
+        )
+
+    def work(self, input_items, output_items):
+        A = input_items[0]  # Amplitud de la señal
+        Q = input_items[1]  # Fase de la señal
+        y = output_items[0] # Salida del bloque
+        N = len(A)          # Número de muestras a procesar
+        # Señal compleja: y[n] = A[n] * exp(j * Q[n])
+        y[:] = A * np.exp(1j * Q)
+        return len(output_items[0])  # Retorna el número de muestras procesadas
